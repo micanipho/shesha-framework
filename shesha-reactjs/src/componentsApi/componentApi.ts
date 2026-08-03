@@ -269,3 +269,49 @@ export interface InputComponentApi<T = unknown> extends CommonComponentApi {
 
 export type TextFieldApi = InputComponentApi<string | undefined>;
 export type NumberFieldApi = InputComponentApi<number | undefined>;
+
+/** A single step of a `Wizard` component. */
+export interface WizardStepInfo {
+  /** Unique id of the step. */
+  readonly id: string;
+  /** Unique key of the step. */
+  readonly key: string;
+  /** Name of the step. */
+  readonly name?: string | undefined;
+  /** Title displayed in the step header. */
+  readonly title: string;
+  /** Sub title displayed in the step header. */
+  readonly subTitle: string;
+  /** Description displayed in the step header. */
+  readonly description: string;
+  /** Icon displayed in the step header. */
+  readonly icon?: string | undefined;
+  /** Permissions required for the step to be shown. */
+  readonly permissions?: string[] | undefined;
+}
+
+export interface WizardApi extends CommonComponentApi {
+  /** Zero-based index of the active step **within `visibleSteps`**, for example: `form.components.myWizard.current` */
+  readonly current: number;
+  /** The active step, i.e. `visibleSteps[current]`. Undefined when there are no visible steps. */
+  readonly currentStep: WizardStepInfo | undefined;
+  /** Steps currently shown to the user, i.e. after visibility and permission rules are applied. `current` is an index into this array. */
+  readonly visibleSteps: WizardStepInfo[];
+  /** All configured steps, regardless of visibility and permissions. */
+  readonly steps: WizardStepInfo[];
+
+  /** Move to the next step. Runs the configured `before`/`after` Next actions. */
+  next(): void;
+  /** Move to the previous step. Runs the configured `before`/`after` Back actions. */
+  back(): void;
+  /** Cancel the wizard. Runs the configured `before`/`after` Cancel actions and closes the closest modal. */
+  cancel(): void;
+  /** Close the closest modal, if any. */
+  close(): void;
+  /** Complete the wizard. Runs the configured `before`/`after` Done actions. */
+  done(): void;
+  /** Clear the data captured on all steps and return to the first step. */
+  reset(): void;
+  /** Activate the step with the specified index in `visibleSteps`. */
+  setStep(stepIndex: number): void;
+}

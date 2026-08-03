@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import ComponentsContainer from '@/components/formDesigner/containers/componentsContainer';
 import ConditionalWrap from '@/components/conditionalWrapper';
 import ParentProvider from '@/providers/parentProvider/index';
-import React, { FC, useEffect, useMemo } from 'react';
+import React, { FC, useEffect, useMemo, useRef } from 'react';
 import { ShaIcon } from '@/components/shaIcon';
 import { Button, Space, Steps } from 'antd';
 import { isValidGuid } from '@/components/formDesigner/components/utils';
@@ -21,6 +21,11 @@ import ValidationErrors from '@/components/validationErrors';
 import { getStyle } from '@/providers/form/utils';
 import { useDataContextManager } from '@/providers/dataContextManager/hooks';
 import { useShaFormInstance } from '@/providers/form/providers/shaFormProvider';
+import { useComponentApi } from '@/providers/componentApi/provider';
+import { useEffectOnce } from '@/hooks/useEffectOnce';
+import { WizardApi } from '@/componentsApi/componentApi';
+
+import apiCode from '../../componentsApi/componentApi.ts?raw';
 
 export const Tabs: FC<IWizardComponentProps> = ({ form, ...model }) => {
   const contextMetadata = useMemo<Promise<IObjectMetadata>>(() => Promise.resolve({
@@ -29,6 +34,7 @@ export const Tabs: FC<IWizardComponentProps> = ({ form, ...model }) => {
       { path: 'current', dataType: DataTypes.number },
       { path: 'currentStep', dataType: DataTypes.object },
       { path: 'visibleSteps', dataType: DataTypes.array },
+      { path: 'steps', dataType: DataTypes.array },
     ],
     dataType: DataTypes.object,
   } as IObjectMetadata), []);
@@ -40,9 +46,42 @@ export const Tabs: FC<IWizardComponentProps> = ({ form, ...model }) => {
   useEffect(() => onChangeContextData(), [onChangeContextData, current]);
 
   const contextData = useMemo(
-    () => ({ current, currentStep, visibleSteps }),
-    [current, currentStep, visibleSteps],
+    () => ({ current, currentStep, visibleSteps, steps: model.steps }),
+    [current, currentStep, visibleSteps, model.steps],
   );
+
+  // #region components API (`form.components.<componentName>`)
+  // The state below changes on every step change, but the API object registered with the component API
+  // manager is long-lived. Keep the latest values in a ref so the registered getters/methods never go stale.
+  const wizardStateRef = useRef({ current, currentStep, visibleSteps, steps: model.steps, back, cancel, close, done, next, reset, setStep });
+  wizardStateRef.current = { current, currentStep, visibleSteps, steps: model.steps, back, cancel, close, done, next, reset, setStep };
+
+  const componentApi = useComponentApi();
+  useEffect(() => {
+    componentApi?.updateApi<WizardApi>({
+      id: model.id,
+      componentName: model.componentName ?? '',
+      level: 3,
+      typeDefinition: { typeName: 'WizardApi', files: [{ content: apiCode, fileName: 'apis/componentApi.ts' }] },
+      api: {
+        back: () => wizardStateRef.current.back(),
+        cancel: () => wizardStateRef.current.cancel(),
+        close: () => wizardStateRef.current.close(),
+        done: () => wizardStateRef.current.done(),
+        next: () => wizardStateRef.current.next(),
+        reset: () => wizardStateRef.current.reset(),
+        setStep: (stepIndex) => wizardStateRef.current.setStep(stepIndex),
+      },
+      properties: [
+        { name: 'current', getter: () => wizardStateRef.current.current },
+        { name: 'currentStep', getter: () => wizardStateRef.current.currentStep },
+        { name: 'visibleSteps', getter: () => wizardStateRef.current.visibleSteps },
+        { name: 'steps', getter: () => wizardStateRef.current.steps },
+      ],
+    });
+  }, [componentApi, model.componentName, model.id]);
+  useEffectOnce(() => () => componentApi?.removeApi(model.id));
+  // #endregion
 
   const {
     buttonsLayout = 'spaceBetween',

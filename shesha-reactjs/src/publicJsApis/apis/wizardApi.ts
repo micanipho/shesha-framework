@@ -26,7 +26,12 @@ export interface IWizardStepProps {
 
 export interface IWizardApi {
   api?: IWizardActions;
+
   current?: number;
+
   currentStep?: IWizardStepProps;
+
   visibleSteps?: IWizardStepProps[];
+  
+  steps?: IWizardStepProps[];
 }

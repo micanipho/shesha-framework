@@ -169,9 +169,17 @@ export const useWizard = (model: IWizardComponentProps): IWizardComponent => {
 
   const argumentsEvaluationContext = { ...allData, fieldsToValidate: componentsNames, validate: validator?.validate };
 
+  // `tabs` comes from the calculated model, which is rebuilt from scratch every time the model is
+  // recalculated (see `getActualModel`). Depending on the array reference would therefore send the user
+  // back to the default step on every recalculation - e.g. as soon as any expression on the form reads
+  // a wizard property such as `current`. The default step only needs re-resolving when the set of steps
+  // itself changes, so depend on the step identities instead of the array reference.
+  const stepsKey = useMemo(() => tabs.map((tab) => tab.id).join('|'), [tabs]);
   useEffect(() => {
     setCurrent(getDefaultStepIndex(tabs, defaultActiveStep));
-  }, [defaultActiveStep, tabs]);
+    // `tabs` is intentionally replaced by `stepsKey`, see the comment above
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultActiveStep, stepsKey]);
 
   useEffect(() => {
     const actionConfiguration = currentStep?.onBeforeRenderActionConfiguration;
