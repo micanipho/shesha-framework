@@ -35,6 +35,22 @@ import { isNonEmptyArray } from '@/utils/array';
 export type EntityReferenceTypes = 'NavigateLink' | 'Quickview' | 'Dialog';
 
 /**
+ * `id` is what the dialog form's data loader keys off (see `GqlLoader.canLoadData`), so it must always
+ * be present. It is merged into - never substituted for - the configured properties: replacing them
+ * silently dropped every custom property unless the user happened to add an explicit `id` row.
+ */
+const DEFAULT_ID_PROPERTY: IKeyValue = { key: 'id', value: '{{entityReference.id}}' };
+
+const withDefaultIdProperty = (properties: IKeyValue[] | undefined): IKeyValue[] => {
+  if (!isNonEmptyArray(properties))
+    return [DEFAULT_ID_PROPERTY];
+
+  return properties.some((p) => p.key === 'id')
+    ? properties
+    : [DEFAULT_ID_PROPERTY, ...properties];
+};
+
+/**
  * Represents the possible value types for an entity reference.
  * Can be a string (GUID), a number (ID), an object with entity metadata, or null/undefined.
  * When an object, it may include:
@@ -274,10 +290,11 @@ export const EntityReference: FC<IEntityReferenceProps> = (props) => {
         modalTitle: props.modalTitle,
         buttons: props.buttons,
         footerButtons: props.footerButtons,
-        additionalProperties:
-          isNonEmptyArray(props.additionalProperties) && props.additionalProperties.some((p) => p.key === 'id')
-            ? props.additionalProperties
-            : [{ key: 'id', value: '{{entityReference.id}}' }],
+        // Migrated into the dialog form's `formArguments` by `migrateToV0` - this is what drives the GET.
+        additionalProperties: withDefaultIdProperty(props.additionalProperties),
+        // ...and the same configured properties are also merged into the submitted payload, which is
+        // what the setting has always claimed to do.
+        additionalSubmitProperties: props.additionalProperties,
         modalWidth: addPx(props.modalWidth, executionContext),
         skipFetchData: props.skipFetchData ?? false,
         submitHttpVerb: props.submitHttpVerb ?? 'PUT',

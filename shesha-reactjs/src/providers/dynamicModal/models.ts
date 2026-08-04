@@ -52,6 +52,12 @@ export interface IModalWithConfigurableFormProps<Values extends object = object>
   formArguments?: object | undefined;
 
   /**
+   * Properties merged into the payload when the form is submitted. Properties the form owns itself
+   * always win, so these only fill in properties the form does not manage.
+   */
+  additionalSubmitProperties?: object | undefined;
+
+  /**
    * Initial values of the modal
    */
   initialValues?: object | undefined;

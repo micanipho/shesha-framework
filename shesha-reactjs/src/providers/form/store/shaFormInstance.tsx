@@ -220,6 +220,8 @@ class ShaFormInstance<Values extends object = object> implements IShaFormInstanc
 
   formArguments?: object | undefined;
 
+  additionalSubmitProperties?: object | undefined;
+
   onFinish: SubmitHandler<Values> | undefined;
 
   onAfterSubmit: AfterSubmitHandler<Values> | undefined;
@@ -661,6 +663,10 @@ class ShaFormInstance<Values extends object = object> implements IShaFormInstanc
     this.formArguments = formArguments;
   };
 
+  setAdditionalSubmitProperties = (properties?: object | undefined): void => {
+    this.additionalSubmitProperties = properties;
+  };
+
   initFormByMarkup = async (payload: InitByMarkupPayload): Promise<void> => {
     const { formArguments } = payload;
 
@@ -770,9 +776,17 @@ class ShaFormInstance<Values extends object = object> implements IShaFormInstanc
     this.log('LOG: ShaForm submit...');
     const { customSubmitCaller } = payload;
 
-    const { formData: data, antdForm } = this;
-    if (!isDefined(data))
+    const { formData, antdForm } = this;
+    if (!isDefined(formData))
       throw new Error('Form data is not defined');
+
+    // Merge the configured properties UNDERNEATH the form data so anything the form owns wins - these
+    // are meant to supply values the form does not manage (e.g. `parentId`), never to override input.
+    // Must happen before the submitter runs: `addFormFieldsList` derives `_formFields` from the keys
+    // of the posted object, and the backend model binder ignores properties missing from that list.
+    const data = isDefined(this.additionalSubmitProperties)
+      ? { ...this.additionalSubmitProperties, ...formData } as Values
+      : formData;
 
     const { getDelayedUpdates } = this.dataSubmitContext ?? {};
 

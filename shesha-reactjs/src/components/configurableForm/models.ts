@@ -88,6 +88,13 @@ export type IConfigurableFormRuntimeProps<TValues extends object = object> = {
   formArguments?: object | undefined;
 
   /**
+   * Properties merged into the payload when the form is submitted, for values the form itself does
+   * not manage (e.g. `parentId` for a form shown in a modal from a childTable). Properties present
+   * in the form data always win, so this can never overwrite what the user entered.
+   */
+  additionalSubmitProperties?: object | undefined;
+
+  /**
    * Form initial values
    */
   initialValues?: Partial<TValues> | undefined;

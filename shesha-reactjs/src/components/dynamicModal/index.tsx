@@ -70,6 +70,7 @@ export const DynamicModalWithForm = <Values extends object = object>(props: IDyn
     isVisible,
     formId,
     formArguments,
+    additionalSubmitProperties,
     initialValues,
     parentFormValues,
     width,
@@ -123,6 +124,7 @@ export const DynamicModalWithForm = <Values extends object = object>(props: IDyn
   const formProps: IConfigurableFormProps<Values> = {
     formId: formId,
     formArguments: formArguments,
+    additionalSubmitProperties: additionalSubmitProperties,
     form: form,
     mode: mode,
     onSubmitted: onSubmitted,

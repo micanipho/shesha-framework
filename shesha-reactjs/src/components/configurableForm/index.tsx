@@ -40,6 +40,7 @@ const ConfigurableFormInner = <Values extends object = object>(props: Configurab
     onValuesChange,
     onMarkupLoaded,
     formArguments,
+    additionalSubmitProperties,
     markupLoadingError,
     showFormInfoOverlay = true,
     showDataLoadingIndicator = true,
@@ -81,6 +82,12 @@ const ConfigurableFormInner = <Values extends object = object>(props: Configurab
   useEffect(() => {
     shaForm.setLogEnabled(Boolean(props.logEnabled));
   }, [shaForm, props.logEnabled]);
+
+  // Kept in sync separately from form init: these are only read at submit time, so a late-arriving
+  // value must still be picked up without re-initializing the form.
+  useEffect(() => {
+    shaForm.setAdditionalSubmitProperties(additionalSubmitProperties);
+  }, [shaForm, additionalSubmitProperties]);
 
   // init form
   useEffect(() => {

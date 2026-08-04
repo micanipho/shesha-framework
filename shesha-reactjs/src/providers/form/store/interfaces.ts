@@ -103,6 +103,7 @@ export interface IShaFormInstance<Values extends object = object> {
   readonly initialValues?: Partial<Values> | undefined;
   readonly parentFormValues?: object | undefined;
   readonly formArguments?: object | undefined;
+  readonly additionalSubmitProperties?: object | undefined;
   readonly formData?: Values | undefined;
   readonly isDataModified: boolean;
   readonly formMode: FormMode;
@@ -114,6 +115,7 @@ export interface IShaFormInstance<Values extends object = object> {
   setFormMode: (formMode: FormMode) => void;
   setFormData: (payload: ISetFormDataPayload<Values>) => void;
   setParentFormValues: (values: object | undefined) => void;
+  setAdditionalSubmitProperties: (properties: object | undefined) => void;
   setValidationErrors: (payload: IFormValidationErrors | undefined) => void;
 
   onFinish?: ((values: Values) => void) | undefined;

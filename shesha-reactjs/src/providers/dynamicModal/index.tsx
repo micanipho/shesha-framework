@@ -26,7 +26,7 @@ import { migrateToV0 } from './migrations/ver0';
 import { DynamicModalRenderer } from './renderer';
 import { showDialogArgumentsFormFactory } from './configurable-actions/show-dialog-arguments';
 import { throwError } from '@/utils/errors';
-import { getLatestInstance } from './utils';
+import { getLatestInstance, keyValuesToObject } from './utils';
 import { createModalApi, IModalApi, createFallbackModalApi } from './modalApi';
 import { isDefined } from '@/utils/nullables';
 
@@ -105,7 +105,7 @@ const DynamicModalProvider: FC<PropsWithChildren> = ({ children }) => {
       executer: (actionArgs, context) => {
         const modalId = nanoid();
 
-        const { formMode, formId, ...restArguments } = actionArgs;
+        const { formMode, formId, additionalSubmitProperties, ...restArguments } = actionArgs;
         if (!formId)
           throw new Error("Form Id is required");
 
@@ -129,6 +129,7 @@ const DynamicModalProvider: FC<PropsWithChildren> = ({ children }) => {
               showCloseIcon: showCloseIcon,
               width: modalWidth === 'custom' && customWidth ? `${customWidth}${widthUnits}` : modalWidth,
               formArguments: dialogArguments,
+              additionalSubmitProperties: keyValuesToObject(additionalSubmitProperties),
               parentFormValues: parentFormValues,
               isVisible: true,
               onCancel: () => {

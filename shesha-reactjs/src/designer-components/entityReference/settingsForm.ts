@@ -413,8 +413,11 @@ export const getSettings: SettingsFormMarkupFactory = ({ fbf }) => {
                               valueName: 'value',
                               tooltip:
                                 'Additional properties you want to be passed when the form gets submitted like parentId in the case where the modal is used in a childTable. ' +
-                                'Also note you can use Mustache expression like {{id}} for value property. \n\n' +
-                                'Id initial value is already initialised with {{entityReference.id}} but you can override it',
+                                'They are also passed to the dialog form as arguments.\n\n' +
+                                'Properties the dialog form manages itself always win, so these only fill in values the form does not set.\n\n' +
+                                'For the value you can use a Mustache expression, but always include the owner - {{data.poBox}}, not {{poBox}}. ' +
+                                'Anything other than data, selectedRow or form is resolved as text, so the value arrives as a string.\n\n' +
+                                'Id is already initialised with {{entityReference.id}} and is required to load the dialog, but you can override it',
                             },
                             {
                               id: nanoid(),
