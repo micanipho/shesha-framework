@@ -126,57 +126,76 @@ export const SidebarContainer: FC<ISidebarContainerProps> = ({
     ) : null;
   };
 
+  const mainArea = (
+    <div
+      className={classNames(
+        styles.sidebarContainerMainArea,
+        styles.canvasWrapper,
+        { 'both-open': leftSidebarProps?.open && rightSidebarProps?.open },
+        { 'left-only-open': leftSidebarProps?.open && !rightSidebarProps?.open },
+        { 'right-only-open': rightSidebarProps?.open && !leftSidebarProps?.open },
+        { 'no-left-panel': !leftSidebarProps },
+        { 'no-right-panel': !rightSidebarProps },
+        { 'no-padding': noPadding },
+        { 'allow-full-collapse': allowFullCollapse },
+      )}
+    >
+      <div
+        ref={canvasRef}
+        className={classNames(
+          styles.sidebarContainerMainAreaBody,
+          { [styles.designerCanvas]: isDesigner && canZoom },
+        )}
+        style={isDesigner && canZoom ? {
+          width: designerWidth,
+          zoom: `${zoom}%`,
+        } : {}}
+      >
+        {children}
+      </div>
+    </div>
+  );
+
   return (
     <div className={classNames(styles.sidebarContainer, { embedded })}>
       {header && (
         <div className={styles.sidebarContainerHeader}>{typeof header === 'function' ? header() : header}</div>
       )}
-      <SizableColumns
-        sizes={currentSizes}
-        expandToMin={false}
-        {...(sizes.minSizes ? { minSize: sizes.minSizes } : {})}
-        {...(sizes.maxSizes ? { maxSize: sizes.maxSizes } : {})}
-        onDrag={handleDragSizesChange}
-        onDragEnd={handleDragSizesChange}
-        gutterSize={DEFAULT_OPTIONS.gutter}
-        gutterAlign="center"
-        snapOffset={5}
-        dragInterval={12}
-        direction="horizontal"
-        cursor="col-resize"
-        className={classNames(styles.sidebarContainerBody)}
-      >
-        {renderSidebar('left')}
-
-        <div
-          className={classNames(
-            styles.sidebarContainerMainArea,
-            styles.canvasWrapper,
-            { 'both-open': leftSidebarProps?.open && rightSidebarProps?.open },
-            { 'left-only-open': leftSidebarProps?.open && !rightSidebarProps?.open },
-            { 'right-only-open': rightSidebarProps?.open && !leftSidebarProps?.open },
-            { 'no-left-panel': !leftSidebarProps },
-            { 'no-right-panel': !rightSidebarProps },
-            { 'no-padding': noPadding },
-            { 'allow-full-collapse': allowFullCollapse },
-          )}
-        >
-          <div
-            ref={canvasRef}
-            className={classNames(
-              styles.sidebarContainerMainAreaBody,
-              { [styles.designerCanvas]: isDesigner && canZoom },
-            )}
-            style={isDesigner && canZoom ? {
-              width: designerWidth,
-              zoom: `${zoom}%`,
-            } : {}}
-          >
-            {children}
+      {allowFullCollapse
+        ? (
+          /* With `allowFullCollapse` a closed panel is unmounted entirely, so the number of
+             panes changes at runtime. react-split can't handle that: it sizes the panes with
+             inline widths on mount and only re-creates the split when sizes/minSize/maxSize
+             change, so a panel opened later gets no width from it and is laid out past the
+             right edge of this (overflow: hidden) container - i.e. off-screen. There is no
+             draggable gutter in this mode anyway, so lay the panes out with plain flex. */
+          <div className={classNames(styles.sidebarContainerBody, 'full-collapse')}>
+            {renderSidebar('left')}
+            {mainArea}
+            {renderSidebar('right')}
           </div>
-        </div>
-        {renderSidebar('right')}
-      </SizableColumns>
+        )
+        : (
+          <SizableColumns
+            sizes={currentSizes}
+            expandToMin={false}
+            {...(sizes.minSizes ? { minSize: sizes.minSizes } : {})}
+            {...(sizes.maxSizes ? { maxSize: sizes.maxSizes } : {})}
+            onDrag={handleDragSizesChange}
+            onDragEnd={handleDragSizesChange}
+            gutterSize={DEFAULT_OPTIONS.gutter}
+            gutterAlign="center"
+            snapOffset={5}
+            dragInterval={12}
+            direction="horizontal"
+            cursor="col-resize"
+            className={classNames(styles.sidebarContainerBody)}
+          >
+            {renderSidebar('left')}
+            {mainArea}
+            {renderSidebar('right')}
+          </SizableColumns>
+        )}
       {/* Dedicated popup container for canvas components - applies zoom transformation */}
       {isDesigner && canZoom && (
         <div

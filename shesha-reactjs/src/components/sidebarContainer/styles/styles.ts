@@ -198,6 +198,38 @@ export const useStyles = createStyles(({ css, cx, prefixCls }) => {
         }
       }
 
+      /* Full-collapse mode (e.g. the datatable filter / columns panel) unmounts a closed
+         panel, so the pane count changes at runtime and react-split can't size the panes -
+         they are laid out by these rules instead. The panel overlays the main area rather
+         than taking flow space, so opening it neither reflows the table nor pushes itself
+         past the right edge of this (overflow: hidden) container. */
+      .${sidebarContainerBody}.full-collapse {
+        .${sidebarContainerLeft}.open,
+        .${sidebarContainerRight}.open {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: min(${LEFT_SIDEBAR_WIDTH}, 100%);
+          /* Stretch to the main area, but never collapse below the panel's own content:
+             a table that renders short (few rows, or columns that failed to resolve)
+             would otherwise squash this to a few unreadable pixels. The inner
+             .sidebar-body is already capped at the viewport, so this can't run away. */
+          min-height: fit-content;
+          /* Above the table's sticky headers and frozen columns, which go up to 999. */
+          z-index: 1000;
+        }
+
+        .${sidebarContainerLeft}.open {
+          left: 0;
+          box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .${sidebarContainerRight}.open {
+          right: 0;
+          box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+        }
+      }
+
       /* Inline usage (e.g. the datatable advanced-filter / columns-selector panel)
          reuses this container as a plain component rather than a full-screen editor.
          In that case the sidebar body must size to its own content, capped at the
