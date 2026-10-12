@@ -58,8 +58,13 @@ namespace Shesha.JsonLogic
             if (!tokens.Any())
                 throw new ArgumentException($"tokens list must not be empty", nameof(tokens));
 
+            // null operands (e.g. optional filter items that can't be resolved on the client side) are skipped
+            var notNullTokens = tokens.Where(t => t.Type != JTokenType.Null).ToArray();
+            if (!notNullTokens.Any())
+                throw new JsonLogicParsingFailedException("All operands are null", new JArray(tokens));
+
             Expression? acc = null;
-            foreach (var argument in tokens)
+            foreach (var argument in notNullTokens)
             {
                 var parsedArgument = ParseTree<T>(argument, param);
                 acc = Reduce(acc, parsedArgument, binder);

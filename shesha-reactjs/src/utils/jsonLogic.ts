@@ -250,6 +250,8 @@ const evaluateMustacheSync = (evaluationNode: IEvaluateNode, allArgs: unknown[],
   };
 };
 
+const isAndOrOperator = (operatorName: string): boolean => ['and', 'or'].indexOf(operatorName) > -1;
+
 export const getEvaluationNodeFromJsonLogicNode = (node: object): IEvaluateNode | undefined => {
   if (isEvaluateJsonLogicNode(node)) {
     const { evaluate } = node;
@@ -320,7 +322,10 @@ export const convertJsonLogicNode = async (
           return evaluationResult.handled ? evaluationResult.value : arg;
         }),
       );
-      convertedArgs = convertedArgs.filter((a) => a !== undefined);
+      // note: and/or operands that can't be resolved (optional expressions) are returned as null and must be dropped
+      convertedArgs = isAndOrOperator(operatorName)
+        ? convertedArgs.filter((a) => isDefined(a))
+        : convertedArgs.filter((a) => a !== undefined);
     } else {
       // note: single arguments may be presented as objects, example: {"!!": {"var": "user.userName"}}
       if (typeof args === 'object' && isDefined(args)) {
@@ -334,7 +339,7 @@ export const convertJsonLogicNode = async (
     }
 
     if (!hasInvalidArguments) {
-      const argumentsAreValid = ['and', 'or'].indexOf(operatorName) > -1
+      const argumentsAreValid = isAndOrOperator(operatorName)
         ? Array.isArray(convertedArgs) && convertedArgs.filter((a) => isDefined(a)).length > 0
         : true;
       if (argumentsAreValid) {
@@ -400,7 +405,10 @@ export const convertJsonLogicNodeSync = (
         const evaluationResult = argumentEvaluator(operatorName, args, argIdx);
         return evaluationResult.handled ? evaluationResult.value : arg;
       });
-      convertedArgs = convertedArgs.filter((a) => a !== undefined);
+      // note: and/or operands that can't be resolved (optional expressions) are returned as null and must be dropped
+      convertedArgs = isAndOrOperator(operatorName)
+        ? convertedArgs.filter((a) => isDefined(a))
+        : convertedArgs.filter((a) => a !== undefined);
     } else {
       // note: single arguments may be presented as objects, example: {"!!": {"var": "user.userName"}}
       if (typeof args === 'object' && isDefined(args)) {
@@ -414,7 +422,7 @@ export const convertJsonLogicNodeSync = (
     }
 
     if (!hasInvalidArguments) {
-      const argumentsAreValid = ['and', 'or'].indexOf(operatorName) > -1
+      const argumentsAreValid = isAndOrOperator(operatorName)
         ? Array.isArray(convertedArgs) && convertedArgs.filter((a) => isDefined(a)).length > 0
         : true;
       if (argumentsAreValid) {
